@@ -1,22 +1,38 @@
 import 'package:flutter/material.dart';
 import 'package:urlitl/view/home_screen.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:urlitl/view/splash_screen.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({Key? key}) : super(key: key);
 
-  // This widget is the root of your application.
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  final Future<FirebaseApp> _initialization = Firebase.initializeApp();
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'UrLitl',
-      theme: ThemeData(
-        primarySwatch: Colors.indigo,
-      ),
-      home: const HomeScreen(),
-    );
+    return FutureBuilder(
+        future: _initialization,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.done) {
+            return MaterialApp(
+              title: 'UrLitl',
+              theme: ThemeData(
+                primarySwatch: Colors.indigo,
+              ),
+              home: const SplashScreen(),
+            );
+          }
+          return const CircularProgressIndicator();
+        });
   }
 }
