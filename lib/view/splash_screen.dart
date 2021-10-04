@@ -17,7 +17,7 @@ class _SplashScreenState extends State<SplashScreen> {
     return AnimatedSplashScreen.withScreenFunction(
       splash: 'assets/images/1.png',
       screenFunction: () async {
-        return const HomeScreen();
+        return const LoginScreen();
       },
       splashTransition: SplashTransition.rotationTransition,
     );

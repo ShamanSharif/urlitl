@@ -10,5 +10,7 @@ target 'Runner' do
 
   # Pods for Runner
   pod 'Firebase'
+  pod 'Firebase/Auth'
+  pod 'Firebase/Firestore'
 
 end

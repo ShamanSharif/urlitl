@@ -16,7 +16,7 @@ class DataFetcher {
     };
     Response<dynamic> response =
         await _connectionHelper.postData(url, data: data);
-    if (response.statusCode == 200) {
+    if (response.statusCode == 200 && response.data[0] != null) {
       goTinyResponse = GoTinyResponse(
         longUrl: response.data[0]["long"],
         shortUrl: "https://gotiny.cc/" + response.data[0]["code"],

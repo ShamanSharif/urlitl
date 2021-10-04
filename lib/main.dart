@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:urlitl/view/home_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:provider/provider.dart';
+import 'package:urlitl/model/auth.dart';
 import 'package:urlitl/view/splash_screen.dart';
 
 void main() {
@@ -24,12 +25,15 @@ class _MyAppState extends State<MyApp> {
         future: _initialization,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.done) {
-            return MaterialApp(
-              title: 'UrLitl',
-              theme: ThemeData(
-                primarySwatch: Colors.indigo,
+            return ChangeNotifierProvider(
+              create: (context) => Auth(),
+              child: MaterialApp(
+                title: 'UrLitl',
+                theme: ThemeData(
+                  primarySwatch: Colors.indigo,
+                ),
+                home: const SplashScreen(),
               ),
-              home: const SplashScreen(),
             );
           }
           return const CircularProgressIndicator();

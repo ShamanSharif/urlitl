@@ -38,6 +38,10 @@ dependencies:
   dio: ^4.0.0
   firebase_core: ^1.7.0
   animated_splash_screen: ^1.1.0
+  firebase_auth: ^3.1.2
+  cloud_firestore: ^2.5.3
+  google_sign_in: ^5.1.1
+  provider: ^6.0.1
 
 dev_dependencies:
   flutter_test:
