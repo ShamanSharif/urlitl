@@ -299,21 +299,64 @@ class _HomeScreenState extends State<HomeScreen> {
                           snapshot.data!.docs.map((DocumentSnapshot document) {
                         Map<String, dynamic> data =
                             document.data()! as Map<String, dynamic>;
-                        return ListTile(
-                          onTap: () {
-                            FlutterClipboard.copy(data['shortUrl'])
-                                .then((value) {
-                              FocusManager.instance.primaryFocus!.unfocus();
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text("Copied to Clipboard"),
-                                  behavior: SnackBarBehavior.floating,
-                                ),
-                              );
-                            });
-                          },
-                          title: Text(data['name'] ?? data['longUrl']),
-                          subtitle: Text(data['shortUrl']),
+                        return Dismissible(
+                          background: Card(
+                            elevation: 0,
+                            color: Color(0xFF9CA0FF),
+                            child: Padding(
+                              padding: const EdgeInsets.only(left: 20.0),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                children: const [
+                                  Icon(
+                                    Icons.share,
+                                    size: 32,
+                                    color: Colors.white,
+                                  )
+                                ],
+                              ),
+                            ),
+                          ),
+                          secondaryBackground: Card(
+                            elevation: 0,
+                            color: const Color(0xFFEB5D63),
+                            child: Padding(
+                              padding: const EdgeInsets.only(right: 20.0),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: const [
+                                  Icon(
+                                    Icons.delete,
+                                    size: 32,
+                                    color: Colors.white,
+                                  )
+                                ],
+                              ),
+                            ),
+                          ),
+                          key: ValueKey<String>(document.id),
+                          child: Card(
+                            elevation: 0,
+                            child: ListTile(
+                              onTap: () {
+                                FlutterClipboard.copy(data['shortUrl'])
+                                    .then((value) {
+                                  FocusManager.instance.primaryFocus!.unfocus();
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text("Copied to Clipboard"),
+                                      behavior: SnackBarBehavior.floating,
+                                    ),
+                                  );
+                                });
+                              },
+                              onLongPress: () {
+                                // TODO: show Modal
+                              },
+                              title: Text(data['name'] ?? data['longUrl']),
+                              subtitle: Text(data['shortUrl']),
+                            ),
+                          ),
                         );
                       }).toList(),
                     );
