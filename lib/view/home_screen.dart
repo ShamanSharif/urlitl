@@ -409,54 +409,72 @@ class _HomeScreenState extends State<HomeScreen> {
                                                         CrossAxisAlignment
                                                             .start,
                                                     children: [
-                                                      const TextField(
-                                                        style: TextStyle(
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                          color: Colors.white,
-                                                        ),
-                                                        decoration:
-                                                            InputDecoration(
-                                                          filled: true,
-                                                          fillColor:
-                                                              Colors.white10,
-                                                          enabledBorder:
-                                                              OutlineInputBorder(
-                                                            gapPadding: 2.0,
-                                                            borderSide:
-                                                                BorderSide(
-                                                              color:
-                                                                  Colors.white,
-                                                              width: 2.0,
-                                                            ),
+                                                      const Padding(
+                                                        padding:
+                                                            EdgeInsets.only(
+                                                                bottom: 16.0),
+                                                        child: TextField(
+                                                          style: TextStyle(
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                            color: Colors.white,
                                                           ),
-                                                          border:
-                                                              OutlineInputBorder(
-                                                            gapPadding: 2.0,
-                                                            borderSide:
-                                                                BorderSide(
-                                                              color:
-                                                                  Colors.white,
-                                                              width: 2.0,
+                                                          decoration:
+                                                              InputDecoration(
+                                                            filled: true,
+                                                            fillColor:
+                                                                Colors.white10,
+                                                            enabledBorder:
+                                                                OutlineInputBorder(
+                                                              gapPadding: 2.0,
+                                                              borderSide:
+                                                                  BorderSide(
+                                                                color: Colors
+                                                                    .white,
+                                                                width: 2.0,
+                                                              ),
+                                                            ),
+                                                            border:
+                                                                OutlineInputBorder(
+                                                              gapPadding: 2.0,
+                                                              borderSide:
+                                                                  BorderSide(
+                                                                color: Colors
+                                                                    .white,
+                                                                width: 2.0,
+                                                              ),
                                                             ),
                                                           ),
                                                         ),
                                                       ),
                                                       const Text(
                                                         "Actual URL",
-                                                        textAlign:
-                                                            TextAlign.left,
                                                         style: TextStyle(
                                                           color: Colors.white,
                                                           fontWeight:
                                                               FontWeight.bold,
                                                         ),
                                                       ),
-                                                      Text(data["longUrl"]),
-                                                      const Text("Shorted URL"),
-                                                      Text(data["shortUrl"]),
-                                                      Text(data["archived"]
-                                                          .toString()),
+                                                      Text(
+                                                        data["longUrl"],
+                                                        style: TextStyle(
+                                                          color: Colors.white,
+                                                        ),
+                                                      ),
+                                                      const Text(
+                                                        "Shorted URL",
+                                                        style: TextStyle(
+                                                          color: Colors.white,
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                        ),
+                                                      ),
+                                                      Text(
+                                                        data["shortUrl"],
+                                                        style: TextStyle(
+                                                          color: Colors.white,
+                                                        ),
+                                                      ),
                                                       MaterialButton(
                                                         onPressed: () {},
                                                         child: Text("Save"),

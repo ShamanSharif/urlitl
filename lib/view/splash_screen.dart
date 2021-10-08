@@ -16,6 +16,7 @@ class _SplashScreenState extends State<SplashScreen> {
   Widget build(BuildContext context) {
     return AnimatedSplashScreen.withScreenFunction(
       splash: 'assets/images/1.png',
+      splashIconSize: 400,
       screenFunction: () async {
         return const LoginScreen();
       },
