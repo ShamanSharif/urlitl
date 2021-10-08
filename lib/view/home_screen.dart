@@ -2,6 +2,7 @@ import 'package:clipboard/clipboard.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:urlitl/controller/data_fetcher.dart';
 import 'package:urlitl/model/auth.dart';
 import 'package:urlitl/model/response.dart';
@@ -18,11 +19,22 @@ class _HomeScreenState extends State<HomeScreen> {
   TextEditingController inputTextController = TextEditingController();
   TextEditingController shortUrlTextController = TextEditingController();
   CollectionReference docs = FirebaseFirestore.instance.collection('docs');
-  final Stream<QuerySnapshot> _docsStream =
-      FirebaseFirestore.instance.collection('docs').snapshots();
-
+  Stream<QuerySnapshot>? _docsStream;
+  String? userUID;
   String? shortUrl;
   bool loading = false;
+
+  @override
+  initState() {
+    userUID = Provider.of<Auth>(context, listen: false).uid;
+    _docsStream = FirebaseFirestore.instance
+        .collection('docs')
+        .doc(userUID)
+        .collection("urlitl")
+        .where("archived", isEqualTo: false)
+        .snapshots();
+    super.initState();
+  }
 
   _fetchShortUrl({required String longUrl}) async {
     GoTinyResponse? response = await _dataFetcher.goTiny(longUrl: longUrl);
@@ -37,11 +49,12 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   _pushDataToFireStore(String? urlName, GoTinyResponse response) {
-    return docs.add({
-      'userID': Provider.of<Auth>(context, listen: false).uid,
+    return docs.doc(userUID).collection("urlitl").add({
       'urlName': urlName,
       'longUrl': response.longUrl,
       'shortUrl': response.shortUrl,
+      'archived': false,
+      'expired': false,
     }).then(
       (value) => ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -51,8 +64,6 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-
-  List<int> line = [1, 2, 3, 4, 5, 6, 7, 8, 9];
 
   @override
   void dispose() {
@@ -76,13 +87,18 @@ class _HomeScreenState extends State<HomeScreen> {
             const Text("Urlittl")
           ],
         ),
+        actions: [
+          IconButton(onPressed: () {}, icon: const Icon(Icons.archive)),
+          IconButton(onPressed: () {}, icon: const Icon(Icons.info)),
+        ],
         titleTextStyle: const TextStyle(
           fontWeight: FontWeight.bold,
           fontSize: 20,
           color: Color(0xFF3F51B5),
         ),
+        actionsIconTheme: const IconThemeData(color: Color(0xFF3F51B5)),
         shadowColor: Colors.transparent,
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.grey[50],
       ),
       body: SafeArea(
         child: Column(
@@ -275,10 +291,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             ),
-            Padding(
-              padding: EdgeInsets.all(10),
-              child: Text("Previous UrLittl's"),
-            ),
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.all(20),
@@ -287,78 +299,206 @@ class _HomeScreenState extends State<HomeScreen> {
                   builder: (BuildContext context,
                       AsyncSnapshot<QuerySnapshot> snapshot) {
                     if (snapshot.hasError) {
-                      return Center(child: Text('Something went wrong'));
+                      return const Center(child: Text('Something went wrong'));
                     }
 
                     if (snapshot.connectionState == ConnectionState.waiting) {
-                      return Center(child: Text("Loading"));
+                      return const Center(child: Text("Loading"));
                     }
 
                     return ListView(
-                      children:
-                          snapshot.data!.docs.map((DocumentSnapshot document) {
-                        Map<String, dynamic> data =
-                            document.data()! as Map<String, dynamic>;
-                        return Dismissible(
-                          background: Card(
-                            elevation: 0,
-                            color: Color(0xFF9CA0FF),
-                            child: Padding(
-                              padding: const EdgeInsets.only(left: 20.0),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.start,
-                                children: const [
-                                  Icon(
-                                    Icons.share,
-                                    size: 32,
-                                    color: Colors.white,
-                                  )
-                                ],
-                              ),
-                            ),
-                          ),
-                          secondaryBackground: Card(
-                            elevation: 0,
-                            color: const Color(0xFFEB5D63),
-                            child: Padding(
-                              padding: const EdgeInsets.only(right: 20.0),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.end,
-                                children: const [
-                                  Icon(
-                                    Icons.delete,
-                                    size: 32,
-                                    color: Colors.white,
-                                  )
-                                ],
-                              ),
-                            ),
-                          ),
-                          key: ValueKey<String>(document.id),
-                          child: Card(
-                            elevation: 0,
-                            child: ListTile(
-                              onTap: () {
-                                FlutterClipboard.copy(data['shortUrl'])
-                                    .then((value) {
-                                  FocusManager.instance.primaryFocus!.unfocus();
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text("Copied to Clipboard"),
-                                      behavior: SnackBarBehavior.floating,
+                      children: snapshot.data!.docs.isNotEmpty
+                          ? snapshot.data!.docs
+                              .map((DocumentSnapshot document) {
+                              Map<String, dynamic> data =
+                                  document.data()! as Map<String, dynamic>;
+                              if (data["archived"] == false) {
+                                return Dismissible(
+                                  key: ValueKey<String>(document.id),
+                                  onDismissed: (direction) {
+                                    if (direction ==
+                                        DismissDirection.startToEnd) {
+                                      docs
+                                          .doc(userUID)
+                                          .collection("urlitl")
+                                          .doc(document.id)
+                                          .update({"archived": true});
+                                    } else {
+                                      docs
+                                          .doc(userUID)
+                                          .collection("urlitl")
+                                          .doc(document.id)
+                                          .delete();
+                                    }
+                                  },
+                                  background: Card(
+                                    elevation: 0,
+                                    color: const Color(0xFFF9F871),
+                                    child: Padding(
+                                      padding:
+                                          const EdgeInsets.only(left: 20.0),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.start,
+                                        children: const [
+                                          Icon(
+                                            Icons.archive,
+                                            size: 32,
+                                            color: Color(0xFF464555),
+                                          )
+                                        ],
+                                      ),
                                     ),
-                                  );
-                                });
-                              },
-                              onLongPress: () {
-                                // TODO: show Modal
-                              },
-                              title: Text(data['name'] ?? data['longUrl']),
-                              subtitle: Text(data['shortUrl']),
-                            ),
-                          ),
-                        );
-                      }).toList(),
+                                  ),
+                                  secondaryBackground: Card(
+                                    elevation: 0,
+                                    color: const Color(0xFFEB5D63),
+                                    child: Padding(
+                                      padding:
+                                          const EdgeInsets.only(right: 20.0),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.end,
+                                        children: const [
+                                          Icon(
+                                            Icons.delete,
+                                            size: 32,
+                                            color: Colors.white,
+                                          )
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                  child: Card(
+                                    elevation: 0,
+                                    child: ListTile(
+                                      onTap: () {
+                                        Share.share(data['shortUrl'],
+                                            subject: 'Shortened by UrLitl');
+                                      },
+                                      onLongPress: () {
+                                        showModalBottomSheet(
+                                          isScrollControlled: true,
+                                          context: context,
+                                          builder: (context) {
+                                            double keyboardHeight =
+                                                MediaQuery.of(context)
+                                                    .viewInsets
+                                                    .bottom;
+
+                                            return AnimatedPadding(
+                                              padding: EdgeInsets.only(
+                                                  bottom: keyboardHeight),
+                                              duration:
+                                                  Duration(milliseconds: 200),
+                                              child: Padding(
+                                                padding:
+                                                    const EdgeInsets.all(25.0),
+                                                child: Container(
+                                                  height: 300,
+                                                  padding:
+                                                      const EdgeInsets.all(20),
+                                                  decoration: BoxDecoration(
+                                                    color: Color(0xFF3F51B5),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            5),
+                                                  ),
+                                                  child: Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                      const TextField(
+                                                        style: TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                          color: Colors.white,
+                                                        ),
+                                                        decoration:
+                                                            InputDecoration(
+                                                          filled: true,
+                                                          fillColor:
+                                                              Colors.white10,
+                                                          enabledBorder:
+                                                              OutlineInputBorder(
+                                                            gapPadding: 2.0,
+                                                            borderSide:
+                                                                BorderSide(
+                                                              color:
+                                                                  Colors.white,
+                                                              width: 2.0,
+                                                            ),
+                                                          ),
+                                                          border:
+                                                              OutlineInputBorder(
+                                                            gapPadding: 2.0,
+                                                            borderSide:
+                                                                BorderSide(
+                                                              color:
+                                                                  Colors.white,
+                                                              width: 2.0,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                      const Text(
+                                                        "Actual URL",
+                                                        textAlign:
+                                                            TextAlign.left,
+                                                        style: TextStyle(
+                                                          color: Colors.white,
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                        ),
+                                                      ),
+                                                      Text(data["longUrl"]),
+                                                      const Text("Shorted URL"),
+                                                      Text(data["shortUrl"]),
+                                                      Text(data["archived"]
+                                                          .toString()),
+                                                      MaterialButton(
+                                                        onPressed: () {},
+                                                        child: Text("Save"),
+                                                      )
+                                                    ],
+                                                  ),
+                                                ),
+                                              ),
+                                            );
+                                          },
+                                          backgroundColor: Colors.white70,
+                                          barrierColor: Colors.white70,
+                                        );
+                                      },
+                                      title:
+                                          Text(data['name'] ?? data['longUrl']),
+                                      subtitle: Text(data['shortUrl']),
+                                    ),
+                                  ),
+                                );
+                              } else {
+                                return const SizedBox();
+                              }
+                            }).toList()
+                          : [
+                              const Icon(
+                                Icons.sailing,
+                                size: 64.0,
+                                color: Colors.grey,
+                              ),
+                              const Padding(
+                                padding: EdgeInsets.symmetric(vertical: 5.0),
+                                child: Text(
+                                  "No Short Links",
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    color: Colors.grey,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ],
                     );
                   },
                 ),
